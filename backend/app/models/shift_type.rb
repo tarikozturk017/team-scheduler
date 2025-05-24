@@ -1,0 +1,2 @@
+class ShiftType < ApplicationRecord
+end

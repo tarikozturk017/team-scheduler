@@ -1,0 +1,15 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  employee: one
+  shift_type: one
+  date: 2025-05-23
+  start_time: 2025-05-23 19:00:29
+  end_time: 2025-05-23 19:00:29
+
+two:
+  employee: two
+  shift_type: two
+  date: 2025-05-23
+  start_time: 2025-05-23 19:00:29
+  end_time: 2025-05-23 19:00:29
