@@ -13,7 +13,7 @@ function NavLink({ href, label }) {
     <Link
       href={href}
       className={`hover:underline ${
-        isActive ? "text-black-600 font-bold underline" : "text-gray-700"
+        isActive ? "text-blue-900 font-bold underline" : "text-gray-700"
       }`}
     >
       {label}
