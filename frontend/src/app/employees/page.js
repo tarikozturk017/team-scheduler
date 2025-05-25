@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
 import { api } from "@/lib/axios";
 import { toast } from "sonner";
+import { Card } from "@/components/ui/card";
+import EmployeeForm from "@/components/employee/EmployeeForm";
+import EmployeeItem from "@/components/employee/EmployeeItem";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function EmployeePage() {
@@ -17,21 +16,22 @@ export default function EmployeePage() {
   const [loading, setLoading] = useState(false);
   const [loadingDeleteId, setLoadingDeleteId] = useState(null);
   const [loadingFetch, setLoadingFetch] = useState(true);
+  const [isFirstLoad, setIsFirstLoad] = useState(true);
 
   useEffect(() => {
     fetchEmployees();
   }, []);
 
   const fetchEmployees = () => {
-    setLoadingFetch(true);
+    if (isFirstLoad) setLoadingFetch(true);
     api
       .get("/employees")
       .then((res) => setEmployees(res.data))
-      .catch((err) => {
-        console.error(err);
-        toast.error("Failed to load employees.");
-      })
-      .finally(() => setLoadingFetch(false));
+      .catch(() => toast.error("Failed to load employees."))
+      .finally(() => {
+        if (isFirstLoad) setLoadingFetch(false);
+        setIsFirstLoad(false);
+      });
   };
 
   const clearForm = () => {
@@ -59,32 +59,19 @@ export default function EmployeePage() {
         toast.success(editingId ? "Employee updated!" : "Employee added!");
         clearForm();
       })
-      .catch((err) => {
-        console.error(err);
-        toast.error(editingId ? "Update failed." : "Creation failed.");
-      })
+      .catch(() => toast.error("Failed to save employee."))
       .finally(() => setLoading(false));
-  };
-
-  const handleEdit = (emp) => {
-    setName(emp.name);
-    setRole(emp.role);
-    setEditingId(emp.id);
   };
 
   const handleDelete = (id) => {
     setLoadingDeleteId(id);
-
     api
       .delete(`/employees/${id}`)
       .then(() => {
         fetchEmployees();
         toast.success("Employee deleted.");
       })
-      .catch((err) => {
-        console.error(err);
-        toast.error("Failed to delete employee.");
-      })
+      .catch(() => toast.error("Failed to delete employee."))
       .finally(() => setLoadingDeleteId(null));
   };
 
@@ -92,50 +79,24 @@ export default function EmployeePage() {
     <div className="max-w-xl mx-auto p-4 space-y-8">
       <h1 className="text-2xl font-bold">Employees</h1>
 
-      {/* Create/Edit Form */}
-      <Card className="p-4 space-y-4">
-        <div>
-          <Label>Name</Label>
-          <Input value={name} onChange={(e) => setName(e.target.value)} />
-        </div>
-        <div>
-          <Label>Role</Label>
-          <Input value={role} onChange={(e) => setRole(e.target.value)} />
-        </div>
-        <div className="flex gap-2">
-          <Button
-            className="cursor-pointer"
-            onClick={handleSubmit}
-            disabled={loading}
-          >
-            {loading
-              ? editingId
-                ? "Updating..."
-                : "Adding..."
-              : editingId
-              ? "Update Employee"
-              : "Add Employee"}
-          </Button>
-          {editingId && (
-            <Button
-              className="cursor-pointer"
-              variant="secondary"
-              onClick={clearForm}
-            >
-              Cancel
-            </Button>
-          )}
-        </div>
-      </Card>
+      <EmployeeForm
+        name={name}
+        role={role}
+        onNameChange={(e) => setName(e.target.value)}
+        onRoleChange={(e) => setRole(e.target.value)}
+        onSubmit={handleSubmit}
+        onCancel={clearForm}
+        editingId={editingId}
+        loading={loading}
+      />
 
-      {/* Employee List */}
       <div className="space-y-2">
         {loadingFetch
           ? Array.from({ length: 3 }).map((_, i) => (
               <Card key={i} className="p-4 flex justify-between items-center">
-                <div className="flex flex-col gap-2 w-full">
+                <div className="flex items-center gap-4 w-full">
+                  <Skeleton className="w-4 h-4 rounded-full" />
                   <Skeleton className="h-4 w-1/2" />
-                  <Skeleton className="h-4 w-1/3" />
                 </div>
                 <div className="flex gap-2">
                   <Skeleton className="h-8 w-20 rounded-md" />
@@ -144,31 +105,17 @@ export default function EmployeePage() {
               </Card>
             ))
           : employees.map((emp) => (
-              <Card
+              <EmployeeItem
                 key={emp.id}
-                className="p-4 flex justify-between items-center"
-              >
-                <div>
-                  {emp.name} – {emp.role}
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => handleEdit(emp)}
-                    className="cursor-pointer"
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    className="cursor-pointer"
-                    onClick={() => handleDelete(emp.id)}
-                    disabled={loadingDeleteId === emp.id}
-                  >
-                    {loadingDeleteId === emp.id ? "Deleting..." : "Delete"}
-                  </Button>
-                </div>
-              </Card>
+                employee={emp}
+                onEdit={() => {
+                  setEditingId(emp.id);
+                  setName(emp.name);
+                  setRole(emp.role);
+                }}
+                onDelete={handleDelete}
+                deleting={loadingDeleteId === emp.id}
+              />
             ))}
       </div>
     </div>

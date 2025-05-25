@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
 import { api } from "@/lib/axios";
 import { toast } from "sonner";
+import { Card } from "@/components/ui/card";
+import ShiftTypeForm from "@/components/shift-type/ShiftTypeForm";
+import ShiftTypeItem from "@/components/shift-type/ShiftTypeItem";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ShiftTypePage() {
@@ -17,21 +16,22 @@ export default function ShiftTypePage() {
   const [loading, setLoading] = useState(false);
   const [loadingDeleteId, setLoadingDeleteId] = useState(null);
   const [loadingFetch, setLoadingFetch] = useState(true);
+  const [isFirstLoad, setIsFirstLoad] = useState(true); // Added
 
   useEffect(() => {
     fetchShiftTypes();
   }, []);
 
   const fetchShiftTypes = () => {
-    setLoadingFetch(true);
+    if (isFirstLoad) setLoadingFetch(true); // Only show skeletons on first load
     api
       .get("/shift_types")
       .then((res) => setShiftTypes(res.data))
-      .catch((err) => {
-        console.error(err);
-        toast.error("Failed to load shift types.");
-      })
-      .finally(() => setLoadingFetch(false));
+      .catch(() => toast.error("Failed to load shift types."))
+      .finally(() => {
+        if (isFirstLoad) setLoadingFetch(false); // Stop skeletons after first load
+        setIsFirstLoad(false); // Mark first load as complete
+      });
   };
 
   const clearForm = () => {
@@ -59,32 +59,21 @@ export default function ShiftTypePage() {
         toast.success(editingId ? "Shift type updated!" : "Shift type added!");
         clearForm();
       })
-      .catch((err) => {
-        console.error(err);
-        toast.error(editingId ? "Failed to update." : "Failed to create.");
-      })
+      .catch(() =>
+        toast.error(editingId ? "Failed to update." : "Failed to create.")
+      )
       .finally(() => setLoading(false));
-  };
-
-  const handleEdit = (type) => {
-    setEditingId(type.id);
-    setName(type.name);
-    setColorCode(type.color_code);
   };
 
   const handleDelete = (id) => {
     setLoadingDeleteId(id);
-
     api
       .delete(`/shift_types/${id}`)
       .then(() => {
         fetchShiftTypes();
         toast.success("Shift type deleted.");
       })
-      .catch((err) => {
-        console.error(err);
-        toast.error("Failed to delete shift type.");
-      })
+      .catch(() => toast.error("Failed to delete shift type."))
       .finally(() => setLoadingDeleteId(null));
   };
 
@@ -92,47 +81,17 @@ export default function ShiftTypePage() {
     <div className="max-w-xl mx-auto p-4 space-y-8">
       <h1 className="text-2xl font-bold">Shift Types</h1>
 
-      {/* Create/Edit Form */}
-      <Card className="p-4 space-y-4">
-        <div>
-          <Label>Name</Label>
-          <Input value={name} onChange={(e) => setName(e.target.value)} />
-        </div>
-        <div>
-          <Label>Color Code</Label>
-          <Input
-            value={colorCode}
-            onChange={(e) => setColorCode(e.target.value)}
-            placeholder="#FFD700"
-          />
-        </div>
-        <div className="flex gap-2">
-          <Button
-            className="cursor-pointer"
-            onClick={handleSubmit}
-            disabled={loading}
-          >
-            {loading
-              ? editingId
-                ? "Updating..."
-                : "Adding..."
-              : editingId
-              ? "Update Shift Type"
-              : "Add Shift Type"}
-          </Button>
-          {editingId && (
-            <Button
-              className="cursor-pointer"
-              variant="secondary"
-              onClick={clearForm}
-            >
-              Cancel
-            </Button>
-          )}
-        </div>
-      </Card>
+      <ShiftTypeForm
+        name={name}
+        colorCode={colorCode}
+        onNameChange={(e) => setName(e.target.value)}
+        onColorChange={(e) => setColorCode(e.target.value)}
+        onSubmit={handleSubmit}
+        onCancel={clearForm}
+        editingId={editingId}
+        loading={loading}
+      />
 
-      {/* List */}
       <div className="space-y-2">
         {loadingFetch
           ? Array.from({ length: 3 }).map((_, i) => (
@@ -148,35 +107,17 @@ export default function ShiftTypePage() {
               </Card>
             ))
           : shiftTypes.map((type) => (
-              <Card
+              <ShiftTypeItem
                 key={type.id}
-                className="p-4 flex justify-between items-center"
-              >
-                <div className="flex items-center gap-4">
-                  <div
-                    className="w-4 h-4 rounded-full"
-                    style={{ backgroundColor: type.color_code }}
-                  ></div>
-                  <span>{type.name}</span>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    className="cursor-pointer"
-                    variant="outline"
-                    onClick={() => handleEdit(type)}
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    className="cursor-pointer"
-                    variant="destructive"
-                    onClick={() => handleDelete(type.id)}
-                    disabled={loadingDeleteId === type.id}
-                  >
-                    {loadingDeleteId === type.id ? "Deleting..." : "Delete"}
-                  </Button>
-                </div>
-              </Card>
+                type={type}
+                onEdit={(t) => {
+                  setEditingId(t.id);
+                  setName(t.name);
+                  setColorCode(t.color_code);
+                }}
+                onDelete={handleDelete}
+                deleting={loadingDeleteId === type.id}
+              />
             ))}
       </div>
     </div>
