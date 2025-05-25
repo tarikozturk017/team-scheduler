@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { api } from "@/lib/axios";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ShiftsPage() {
   const [shifts, setShifts] = useState([]);
@@ -22,6 +23,7 @@ export default function ShiftsPage() {
 
   const [loadingSubmit, setLoadingSubmit] = useState(false);
   const [loadingDeleteId, setLoadingDeleteId] = useState(null);
+  const [loadingFetch, setLoadingFetch] = useState(true);
 
   useEffect(() => {
     fetchShifts();
@@ -30,13 +32,15 @@ export default function ShiftsPage() {
   }, []);
 
   const fetchShifts = () => {
+    setLoadingFetch(true);
     api
       .get("/shifts")
       .then((res) => setShifts(res.data))
       .catch((err) => {
         console.error(err);
         toast.error("Failed to load shifts.");
-      });
+      })
+      .finally(() => setLoadingFetch(false));
   };
 
   const fetchEmployees = () => {
@@ -224,49 +228,63 @@ export default function ShiftsPage() {
 
       {/* List Shifts */}
       <div className="space-y-2">
-        {shifts.map((shift) => (
-          <Card
-            key={shift.id}
-            className="p-4 flex justify-between items-center"
-          >
-            <div>
-              <div className="font-semibold">
-                {shift.employee.name} – {shift.employee.role}
-              </div>
-              <div className="text-sm text-muted-foreground">
-                {shift.date} ({shift.start_time} - {shift.end_time})
-              </div>
-              <div className="text-sm mt-1">
-                <span
-                  className="inline-block px-2 py-1 rounded"
-                  style={{
-                    backgroundColor: shift.shift_type.color_code,
-                    color: "white",
-                  }}
-                >
-                  {shift.shift_type.name}
-                </span>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                className={"cursor-pointer"}
-                variant="outline"
-                onClick={() => handleEdit(shift)}
+        {loadingFetch
+          ? Array.from({ length: 3 }).map((_, i) => (
+              <Card key={i} className="p-4 flex justify-between items-center">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-64" />
+                  <Skeleton className="h-4 w-48" />
+                  <Skeleton className="h-6 w-24 rounded" />
+                </div>
+                <div className="flex gap-2">
+                  <Skeleton className="h-8 w-20 rounded-md" />
+                  <Skeleton className="h-8 w-20 rounded-md" />
+                </div>
+              </Card>
+            ))
+          : shifts.map((shift) => (
+              <Card
+                key={shift.id}
+                className="p-4 flex justify-between items-center"
               >
-                Edit
-              </Button>
-              <Button
-                className={"cursor-pointer"}
-                variant="destructive"
-                onClick={() => handleDelete(shift.id)}
-                disabled={loadingDeleteId === shift.id}
-              >
-                {loadingDeleteId === shift.id ? "Deleting..." : "Delete"}
-              </Button>
-            </div>
-          </Card>
-        ))}
+                <div>
+                  <div className="font-semibold">
+                    {shift.employee.name} – {shift.employee.role}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {shift.date} ({shift.start_time} - {shift.end_time})
+                  </div>
+                  <div className="text-sm mt-1">
+                    <span
+                      className="inline-block px-2 py-1 rounded"
+                      style={{
+                        backgroundColor: shift.shift_type.color_code,
+                        color: "white",
+                      }}
+                    >
+                      {shift.shift_type.name}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    className={"cursor-pointer"}
+                    variant="outline"
+                    onClick={() => handleEdit(shift)}
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    className={"cursor-pointer"}
+                    variant="destructive"
+                    onClick={() => handleDelete(shift.id)}
+                    disabled={loadingDeleteId === shift.id}
+                  >
+                    {loadingDeleteId === shift.id ? "Deleting..." : "Delete"}
+                  </Button>
+                </div>
+              </Card>
+            ))}
       </div>
     </div>
   );

@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { api } from "@/lib/axios";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function EmployeePage() {
   const [employees, setEmployees] = useState([]);
@@ -15,19 +16,22 @@ export default function EmployeePage() {
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [loadingDeleteId, setLoadingDeleteId] = useState(null);
+  const [loadingFetch, setLoadingFetch] = useState(true);
 
   useEffect(() => {
     fetchEmployees();
   }, []);
 
   const fetchEmployees = () => {
+    setLoadingFetch(true);
     api
       .get("/employees")
       .then((res) => setEmployees(res.data))
       .catch((err) => {
         console.error(err);
         toast.error("Failed to load employees.");
-      });
+      })
+      .finally(() => setLoadingFetch(false));
   };
 
   const clearForm = () => {
@@ -126,30 +130,46 @@ export default function EmployeePage() {
 
       {/* Employee List */}
       <div className="space-y-2">
-        {employees.map((emp) => (
-          <Card key={emp.id} className="p-4 flex justify-between items-center">
-            <div>
-              {emp.name} – {emp.role}
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={() => handleEdit(emp)}
-                className="cursor-pointer"
+        {loadingFetch
+          ? Array.from({ length: 3 }).map((_, i) => (
+              <Card key={i} className="p-4 flex justify-between items-center">
+                <div className="flex flex-col gap-2 w-full">
+                  <Skeleton className="h-4 w-1/2" />
+                  <Skeleton className="h-4 w-1/3" />
+                </div>
+                <div className="flex gap-2">
+                  <Skeleton className="h-8 w-20 rounded-md" />
+                  <Skeleton className="h-8 w-20 rounded-md" />
+                </div>
+              </Card>
+            ))
+          : employees.map((emp) => (
+              <Card
+                key={emp.id}
+                className="p-4 flex justify-between items-center"
               >
-                Edit
-              </Button>
-              <Button
-                variant="destructive"
-                className="cursor-pointer"
-                onClick={() => handleDelete(emp.id)}
-                disabled={loadingDeleteId === emp.id}
-              >
-                {loadingDeleteId === emp.id ? "Deleting..." : "Delete"}
-              </Button>
-            </div>
-          </Card>
-        ))}
+                <div>
+                  {emp.name} – {emp.role}
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => handleEdit(emp)}
+                    className="cursor-pointer"
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    className="cursor-pointer"
+                    onClick={() => handleDelete(emp.id)}
+                    disabled={loadingDeleteId === emp.id}
+                  >
+                    {loadingDeleteId === emp.id ? "Deleting..." : "Delete"}
+                  </Button>
+                </div>
+              </Card>
+            ))}
       </div>
     </div>
   );

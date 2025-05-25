@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { api } from "@/lib/axios";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ShiftTypePage() {
   const [shiftTypes, setShiftTypes] = useState([]);
@@ -15,19 +16,22 @@ export default function ShiftTypePage() {
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [loadingDeleteId, setLoadingDeleteId] = useState(null);
+  const [loadingFetch, setLoadingFetch] = useState(true);
 
   useEffect(() => {
     fetchShiftTypes();
   }, []);
 
   const fetchShiftTypes = () => {
+    setLoadingFetch(true);
     api
       .get("/shift_types")
       .then((res) => setShiftTypes(res.data))
       .catch((err) => {
         console.error(err);
         toast.error("Failed to load shift types.");
-      });
+      })
+      .finally(() => setLoadingFetch(false));
   };
 
   const clearForm = () => {
@@ -130,34 +134,50 @@ export default function ShiftTypePage() {
 
       {/* List */}
       <div className="space-y-2">
-        {shiftTypes.map((type) => (
-          <Card key={type.id} className="p-4 flex justify-between items-center">
-            <div className="flex items-center gap-4">
-              <div
-                className="w-4 h-4 rounded-full"
-                style={{ backgroundColor: type.color_code }}
-              ></div>
-              <span>{type.name}</span>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                className="cursor-pointer"
-                variant="outline"
-                onClick={() => handleEdit(type)}
+        {loadingFetch
+          ? Array.from({ length: 3 }).map((_, i) => (
+              <Card key={i} className="p-4 flex justify-between items-center">
+                <div className="flex items-center gap-4 w-full">
+                  <Skeleton className="w-4 h-4 rounded-full" />
+                  <Skeleton className="h-4 w-1/2" />
+                </div>
+                <div className="flex gap-2">
+                  <Skeleton className="h-8 w-20 rounded-md" />
+                  <Skeleton className="h-8 w-20 rounded-md" />
+                </div>
+              </Card>
+            ))
+          : shiftTypes.map((type) => (
+              <Card
+                key={type.id}
+                className="p-4 flex justify-between items-center"
               >
-                Edit
-              </Button>
-              <Button
-                className="cursor-pointer"
-                variant="destructive"
-                onClick={() => handleDelete(type.id)}
-                disabled={loadingDeleteId === type.id}
-              >
-                {loadingDeleteId === type.id ? "Deleting..." : "Delete"}
-              </Button>
-            </div>
-          </Card>
-        ))}
+                <div className="flex items-center gap-4">
+                  <div
+                    className="w-4 h-4 rounded-full"
+                    style={{ backgroundColor: type.color_code }}
+                  ></div>
+                  <span>{type.name}</span>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    className="cursor-pointer"
+                    variant="outline"
+                    onClick={() => handleEdit(type)}
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    className="cursor-pointer"
+                    variant="destructive"
+                    onClick={() => handleDelete(type.id)}
+                    disabled={loadingDeleteId === type.id}
+                  >
+                    {loadingDeleteId === type.id ? "Deleting..." : "Delete"}
+                  </Button>
+                </div>
+              </Card>
+            ))}
       </div>
     </div>
   );
