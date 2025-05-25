@@ -12,7 +12,8 @@ export default function ShiftTypePage() {
   const [shiftTypes, setShiftTypes] = useState([]);
   const [name, setName] = useState("");
   const [colorCode, setColorCode] = useState("");
-  const [loadingCreate, setLoadingCreate] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [loadingDeleteId, setLoadingDeleteId] = useState(null);
 
   useEffect(() => {
@@ -29,27 +30,42 @@ export default function ShiftTypePage() {
       });
   };
 
-  const handleCreate = () => {
+  const clearForm = () => {
+    setName("");
+    setColorCode("");
+    setEditingId(null);
+  };
+
+  const handleSubmit = () => {
     if (!name || !colorCode) {
       toast.warning("Please enter both name and color code.");
       return;
     }
 
-    setLoadingCreate(true);
+    setLoading(true);
 
-    api
-      .post("/shift_types", { shift_type: { name, color_code: colorCode } })
+    const payload = { shift_type: { name, color_code: colorCode } };
+    const request = editingId
+      ? api.patch(`/shift_types/${editingId}`, payload)
+      : api.post("/shift_types", payload);
+
+    request
       .then(() => {
-        setName("");
-        setColorCode("");
         fetchShiftTypes();
-        toast.success("Shift type added successfully!");
+        toast.success(editingId ? "Shift type updated!" : "Shift type added!");
+        clearForm();
       })
       .catch((err) => {
         console.error(err);
-        toast.error("Failed to add shift type.");
+        toast.error(editingId ? "Failed to update." : "Failed to create.");
       })
-      .finally(() => setLoadingCreate(false));
+      .finally(() => setLoading(false));
+  };
+
+  const handleEdit = (type) => {
+    setEditingId(type.id);
+    setName(type.name);
+    setColorCode(type.color_code);
   };
 
   const handleDelete = (id) => {
@@ -72,7 +88,7 @@ export default function ShiftTypePage() {
     <div className="max-w-xl mx-auto p-4 space-y-8">
       <h1 className="text-2xl font-bold">Shift Types</h1>
 
-      {/* Create Form */}
+      {/* Create/Edit Form */}
       <Card className="p-4 space-y-4">
         <div>
           <Label>Name</Label>
@@ -86,9 +102,30 @@ export default function ShiftTypePage() {
             placeholder="#FFD700"
           />
         </div>
-        <Button onClick={handleCreate} disabled={loadingCreate}>
-          {loadingCreate ? "Adding..." : "Add Shift Type"}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            className="cursor-pointer"
+            onClick={handleSubmit}
+            disabled={loading}
+          >
+            {loading
+              ? editingId
+                ? "Updating..."
+                : "Adding..."
+              : editingId
+              ? "Update Shift Type"
+              : "Add Shift Type"}
+          </Button>
+          {editingId && (
+            <Button
+              className="cursor-pointer"
+              variant="secondary"
+              onClick={clearForm}
+            >
+              Cancel
+            </Button>
+          )}
+        </div>
       </Card>
 
       {/* List */}
@@ -102,13 +139,23 @@ export default function ShiftTypePage() {
               ></div>
               <span>{type.name}</span>
             </div>
-            <Button
-              variant="destructive"
-              onClick={() => handleDelete(type.id)}
-              disabled={loadingDeleteId === type.id}
-            >
-              {loadingDeleteId === type.id ? "Deleting..." : "Delete"}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                className="cursor-pointer"
+                variant="outline"
+                onClick={() => handleEdit(type)}
+              >
+                Edit
+              </Button>
+              <Button
+                className="cursor-pointer"
+                variant="destructive"
+                onClick={() => handleDelete(type.id)}
+                disabled={loadingDeleteId === type.id}
+              >
+                {loadingDeleteId === type.id ? "Deleting..." : "Delete"}
+              </Button>
+            </div>
           </Card>
         ))}
       </div>

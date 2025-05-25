@@ -12,7 +12,8 @@ export default function EmployeePage() {
   const [employees, setEmployees] = useState([]);
   const [name, setName] = useState("");
   const [role, setRole] = useState("");
-  const [loadingCreate, setLoadingCreate] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [loadingDeleteId, setLoadingDeleteId] = useState(null);
 
   useEffect(() => {
@@ -29,27 +30,42 @@ export default function EmployeePage() {
       });
   };
 
-  const handleCreate = () => {
+  const clearForm = () => {
+    setName("");
+    setRole("");
+    setEditingId(null);
+  };
+
+  const handleSubmit = () => {
     if (!name || !role) {
       toast.warning("Please enter both name and role.");
       return;
     }
 
-    setLoadingCreate(true);
+    setLoading(true);
 
-    api
-      .post("/employees", { employee: { name, role } })
+    const payload = { employee: { name, role } };
+    const request = editingId
+      ? api.patch(`/employees/${editingId}`, payload)
+      : api.post("/employees", payload);
+
+    request
       .then(() => {
-        setName("");
-        setRole("");
         fetchEmployees();
-        toast.success("Employee added successfully!");
+        toast.success(editingId ? "Employee updated!" : "Employee added!");
+        clearForm();
       })
       .catch((err) => {
         console.error(err);
-        toast.error("Failed to add employee.");
+        toast.error(editingId ? "Update failed." : "Creation failed.");
       })
-      .finally(() => setLoadingCreate(false));
+      .finally(() => setLoading(false));
+  };
+
+  const handleEdit = (emp) => {
+    setName(emp.name);
+    setRole(emp.role);
+    setEditingId(emp.id);
   };
 
   const handleDelete = (id) => {
@@ -72,7 +88,7 @@ export default function EmployeePage() {
     <div className="max-w-xl mx-auto p-4 space-y-8">
       <h1 className="text-2xl font-bold">Employees</h1>
 
-      {/* Create Form */}
+      {/* Create/Edit Form */}
       <Card className="p-4 space-y-4">
         <div>
           <Label>Name</Label>
@@ -82,9 +98,30 @@ export default function EmployeePage() {
           <Label>Role</Label>
           <Input value={role} onChange={(e) => setRole(e.target.value)} />
         </div>
-        <Button onClick={handleCreate} disabled={loadingCreate}>
-          {loadingCreate ? "Adding..." : "Add Employee"}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            className="cursor-pointer"
+            onClick={handleSubmit}
+            disabled={loading}
+          >
+            {loading
+              ? editingId
+                ? "Updating..."
+                : "Adding..."
+              : editingId
+              ? "Update Employee"
+              : "Add Employee"}
+          </Button>
+          {editingId && (
+            <Button
+              className="cursor-pointer"
+              variant="secondary"
+              onClick={clearForm}
+            >
+              Cancel
+            </Button>
+          )}
+        </div>
       </Card>
 
       {/* Employee List */}
@@ -94,13 +131,23 @@ export default function EmployeePage() {
             <div>
               {emp.name} – {emp.role}
             </div>
-            <Button
-              variant="destructive"
-              onClick={() => handleDelete(emp.id)}
-              disabled={loadingDeleteId === emp.id}
-            >
-              {loadingDeleteId === emp.id ? "Deleting..." : "Delete"}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => handleEdit(emp)}
+                className="cursor-pointer"
+              >
+                Edit
+              </Button>
+              <Button
+                variant="destructive"
+                className="cursor-pointer"
+                onClick={() => handleDelete(emp.id)}
+                disabled={loadingDeleteId === emp.id}
+              >
+                {loadingDeleteId === emp.id ? "Deleting..." : "Delete"}
+              </Button>
+            </div>
           </Card>
         ))}
       </div>

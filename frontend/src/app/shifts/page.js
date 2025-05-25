@@ -197,7 +197,11 @@ export default function ShiftsPage() {
         </div>
 
         <div className="flex gap-2">
-          <Button onClick={handleSubmit} disabled={loadingSubmit}>
+          <Button
+            className={"cursor-pointer"}
+            onClick={handleSubmit}
+            disabled={loadingSubmit}
+          >
             {loadingSubmit
               ? editingId
                 ? "Updating..."
@@ -207,7 +211,11 @@ export default function ShiftsPage() {
               : "Add Shift"}
           </Button>
           {editingId && (
-            <Button variant="secondary" onClick={clearForm}>
+            <Button
+              className={"cursor-pointer"}
+              variant="secondary"
+              onClick={clearForm}
+            >
               Cancel
             </Button>
           )}
@@ -241,10 +249,15 @@ export default function ShiftsPage() {
               </div>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={() => handleEdit(shift)}>
+              <Button
+                className={"cursor-pointer"}
+                variant="outline"
+                onClick={() => handleEdit(shift)}
+              >
                 Edit
               </Button>
               <Button
+                className={"cursor-pointer"}
                 variant="destructive"
                 onClick={() => handleDelete(shift.id)}
                 disabled={loadingDeleteId === shift.id}
