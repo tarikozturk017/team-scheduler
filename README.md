@@ -3,7 +3,7 @@
 A simple employee shift scheduling system with a Ruby on Rails API backend and a modern React (Next.js) frontend.
 
 🔗 Live Demo
-👉 https://team-scheduler-7nqkuji1v-tarikozturk017s-projects.vercel.app/ 
+👉 [https://team-scheduler-six.vercel.app/](https://team-scheduler-six.vercel.app/)
 
 ---
 
