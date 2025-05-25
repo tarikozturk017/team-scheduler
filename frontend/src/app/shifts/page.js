@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { api } from "@/lib/axios";
+import { toast } from "sonner";
 
 export default function ShiftsPage() {
   const [shifts, setShifts] = useState([]);
@@ -19,6 +20,9 @@ export default function ShiftsPage() {
   const [endTime, setEndTime] = useState("");
   const [editingId, setEditingId] = useState(null);
 
+  const [loadingSubmit, setLoadingSubmit] = useState(false);
+  const [loadingDeleteId, setLoadingDeleteId] = useState(null);
+
   useEffect(() => {
     fetchShifts();
     fetchEmployees();
@@ -29,21 +33,30 @@ export default function ShiftsPage() {
     api
       .get("/shifts")
       .then((res) => setShifts(res.data))
-      .catch(console.error);
+      .catch((err) => {
+        console.error(err);
+        toast.error("Failed to load shifts.");
+      });
   };
 
   const fetchEmployees = () => {
     api
       .get("/employees")
       .then((res) => setEmployees(res.data))
-      .catch(console.error);
+      .catch((err) => {
+        console.error(err);
+        toast.error("Failed to load employees.");
+      });
   };
 
   const fetchShiftTypes = () => {
     api
       .get("/shift_types")
       .then((res) => setShiftTypes(res.data))
-      .catch(console.error);
+      .catch((err) => {
+        console.error(err);
+        toast.error("Failed to load shift types.");
+      });
   };
 
   const clearForm = () => {
@@ -56,6 +69,13 @@ export default function ShiftsPage() {
   };
 
   const handleSubmit = () => {
+    if (!employeeId || !shiftTypeId || !date || !startTime || !endTime) {
+      toast.warning("Please fill in all fields.");
+      return;
+    }
+
+    setLoadingSubmit(true);
+
     const payload = {
       shift: {
         employee_id: employeeId,
@@ -74,8 +94,13 @@ export default function ShiftsPage() {
       .then(() => {
         clearForm();
         fetchShifts();
+        toast.success(`Shift ${editingId ? "updated" : "added"} successfully!`);
       })
-      .catch(console.error);
+      .catch((err) => {
+        console.error(err);
+        toast.error(`Failed to ${editingId ? "update" : "add"} shift.`);
+      })
+      .finally(() => setLoadingSubmit(false));
   };
 
   const handleEdit = (shift) => {
@@ -88,7 +113,19 @@ export default function ShiftsPage() {
   };
 
   const handleDelete = (id) => {
-    api.delete(`/shifts/${id}`).then(fetchShifts).catch(console.error);
+    setLoadingDeleteId(id);
+
+    api
+      .delete(`/shifts/${id}`)
+      .then(() => {
+        fetchShifts();
+        toast.success("Shift deleted.");
+      })
+      .catch((err) => {
+        console.error(err);
+        toast.error("Failed to delete shift.");
+      })
+      .finally(() => setLoadingDeleteId(null));
   };
 
   return (
@@ -160,8 +197,14 @@ export default function ShiftsPage() {
         </div>
 
         <div className="flex gap-2">
-          <Button onClick={handleSubmit}>
-            {editingId ? "Update Shift" : "Add Shift"}
+          <Button onClick={handleSubmit} disabled={loadingSubmit}>
+            {loadingSubmit
+              ? editingId
+                ? "Updating..."
+                : "Adding..."
+              : editingId
+              ? "Update Shift"
+              : "Add Shift"}
           </Button>
           {editingId && (
             <Button variant="secondary" onClick={clearForm}>
@@ -204,8 +247,9 @@ export default function ShiftsPage() {
               <Button
                 variant="destructive"
                 onClick={() => handleDelete(shift.id)}
+                disabled={loadingDeleteId === shift.id}
               >
-                Delete
+                {loadingDeleteId === shift.id ? "Deleting..." : "Delete"}
               </Button>
             </div>
           </Card>

@@ -6,11 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { api } from "@/lib/axios";
+import { toast } from "sonner";
 
 export default function EmployeePage() {
   const [employees, setEmployees] = useState([]);
   const [name, setName] = useState("");
   const [role, setRole] = useState("");
+  const [loadingCreate, setLoadingCreate] = useState(false);
+  const [loadingDeleteId, setLoadingDeleteId] = useState(null);
 
   useEffect(() => {
     fetchEmployees();
@@ -20,23 +23,49 @@ export default function EmployeePage() {
     api
       .get("/employees")
       .then((res) => setEmployees(res.data))
-      .catch(console.error);
+      .catch((err) => {
+        console.error(err);
+        toast.error("Failed to load employees.");
+      });
   };
 
   const handleCreate = () => {
-    if (!name || !role) return;
+    if (!name || !role) {
+      toast.warning("Please enter both name and role.");
+      return;
+    }
+
+    setLoadingCreate(true);
+
     api
       .post("/employees", { employee: { name, role } })
       .then(() => {
         setName("");
         setRole("");
         fetchEmployees();
+        toast.success("Employee added successfully!");
       })
-      .catch(console.error);
+      .catch((err) => {
+        console.error(err);
+        toast.error("Failed to add employee.");
+      })
+      .finally(() => setLoadingCreate(false));
   };
 
   const handleDelete = (id) => {
-    api.delete(`/employees/${id}`).then(fetchEmployees).catch(console.error);
+    setLoadingDeleteId(id);
+
+    api
+      .delete(`/employees/${id}`)
+      .then(() => {
+        fetchEmployees();
+        toast.success("Employee deleted.");
+      })
+      .catch((err) => {
+        console.error(err);
+        toast.error("Failed to delete employee.");
+      })
+      .finally(() => setLoadingDeleteId(null));
   };
 
   return (
@@ -53,7 +82,9 @@ export default function EmployeePage() {
           <Label>Role</Label>
           <Input value={role} onChange={(e) => setRole(e.target.value)} />
         </div>
-        <Button onClick={handleCreate}>Add Employee</Button>
+        <Button onClick={handleCreate} disabled={loadingCreate}>
+          {loadingCreate ? "Adding..." : "Add Employee"}
+        </Button>
       </Card>
 
       {/* Employee List */}
@@ -63,8 +94,12 @@ export default function EmployeePage() {
             <div>
               {emp.name} – {emp.role}
             </div>
-            <Button variant="destructive" onClick={() => handleDelete(emp.id)}>
-              Delete
+            <Button
+              variant="destructive"
+              onClick={() => handleDelete(emp.id)}
+              disabled={loadingDeleteId === emp.id}
+            >
+              {loadingDeleteId === emp.id ? "Deleting..." : "Delete"}
             </Button>
           </Card>
         ))}

@@ -6,11 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { api } from "@/lib/axios";
+import { toast } from "sonner";
 
 export default function ShiftTypePage() {
   const [shiftTypes, setShiftTypes] = useState([]);
   const [name, setName] = useState("");
   const [colorCode, setColorCode] = useState("");
+  const [loadingCreate, setLoadingCreate] = useState(false);
+  const [loadingDeleteId, setLoadingDeleteId] = useState(null);
 
   useEffect(() => {
     fetchShiftTypes();
@@ -20,23 +23,49 @@ export default function ShiftTypePage() {
     api
       .get("/shift_types")
       .then((res) => setShiftTypes(res.data))
-      .catch(console.error);
+      .catch((err) => {
+        console.error(err);
+        toast.error("Failed to load shift types.");
+      });
   };
 
   const handleCreate = () => {
-    if (!name || !colorCode) return;
+    if (!name || !colorCode) {
+      toast.warning("Please enter both name and color code.");
+      return;
+    }
+
+    setLoadingCreate(true);
+
     api
       .post("/shift_types", { shift_type: { name, color_code: colorCode } })
       .then(() => {
         setName("");
         setColorCode("");
         fetchShiftTypes();
+        toast.success("Shift type added successfully!");
       })
-      .catch(console.error);
+      .catch((err) => {
+        console.error(err);
+        toast.error("Failed to add shift type.");
+      })
+      .finally(() => setLoadingCreate(false));
   };
 
   const handleDelete = (id) => {
-    api.delete(`/shift_types/${id}`).then(fetchShiftTypes).catch(console.error);
+    setLoadingDeleteId(id);
+
+    api
+      .delete(`/shift_types/${id}`)
+      .then(() => {
+        fetchShiftTypes();
+        toast.success("Shift type deleted.");
+      })
+      .catch((err) => {
+        console.error(err);
+        toast.error("Failed to delete shift type.");
+      })
+      .finally(() => setLoadingDeleteId(null));
   };
 
   return (
@@ -57,7 +86,9 @@ export default function ShiftTypePage() {
             placeholder="#FFD700"
           />
         </div>
-        <Button onClick={handleCreate}>Add Shift Type</Button>
+        <Button onClick={handleCreate} disabled={loadingCreate}>
+          {loadingCreate ? "Adding..." : "Add Shift Type"}
+        </Button>
       </Card>
 
       {/* List */}
@@ -71,8 +102,12 @@ export default function ShiftTypePage() {
               ></div>
               <span>{type.name}</span>
             </div>
-            <Button variant="destructive" onClick={() => handleDelete(type.id)}>
-              Delete
+            <Button
+              variant="destructive"
+              onClick={() => handleDelete(type.id)}
+              disabled={loadingDeleteId === type.id}
+            >
+              {loadingDeleteId === type.id ? "Deleting..." : "Delete"}
             </Button>
           </Card>
         ))}

@@ -1,28 +1,38 @@
-import { Geist, Geist_Mono } from "next/font/google";
+"use client";
+
 import "./globals.css";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Toaster } from "sonner";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+function NavLink({ href, label }) {
+  const pathname = usePathname();
+  const isActive = pathname === href;
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-export const metadata = {
-  title: "Team Scheduler",
-  description: "Schedule shifts",
-};
+  return (
+    <Link
+      href={href}
+      className={`hover:underline ${
+        isActive ? "text-black-600 font-bold underline" : "text-gray-700"
+      }`}
+    >
+      {label}
+    </Link>
+  );
+}
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
+      <body className="bg-gray-50 text-gray-900">
+        <nav className="bg-white shadow-sm px-6 py-4 flex gap-6 border-b">
+          <NavLink href="/" label="Dashboard" />
+          <NavLink href="/employees" label="Employees" />
+          <NavLink href="/shift-types" label="Shift Types" />
+          <NavLink href="/shifts" label="Shifts" />
+        </nav>
+        <main className="p-6">{children}</main>
+        <Toaster position="top-center" richColors />
       </body>
     </html>
   );
