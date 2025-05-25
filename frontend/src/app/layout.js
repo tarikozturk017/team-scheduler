@@ -28,8 +28,8 @@ export default function RootLayout({ children }) {
         <nav className="bg-white shadow-sm px-6 py-4 flex gap-6 border-b">
           <NavLink href="/" label="Dashboard" />
           <NavLink href="/employees" label="Employees" />
-          <NavLink href="/shift-types" label="Shift Types" />
           <NavLink href="/shifts" label="Shifts" />
+          <NavLink href="/shift-types" label="Shift Types" />
         </nav>
         <main className="p-6">{children}</main>
         <Toaster position="top-center" richColors />
