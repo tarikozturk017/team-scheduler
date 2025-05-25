@@ -14,3 +14,6 @@ development:
 test:
   <<: *default
   database: team_scheduler_test
+
+production:
+  url: <%= ENV['DATABASE_URL'] %>
