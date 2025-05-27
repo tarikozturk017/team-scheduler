@@ -31,11 +31,4 @@ A simple employee shift scheduling system with a Ruby on Rails API backend and a
 
 ![team-scheduler-data-structure](./assets/image.png)
 
-## Getting Started (Backend)
 
-```bash
-cd backend
-bundle install
-rails db:create db:migrate db:seed
-rails server
-```
