@@ -5,7 +5,7 @@ A simple employee shift scheduling system with a Ruby on Rails API backend and a
 🔗 Live Demo
 👉 [https://team-scheduler-six.vercel.app/](https://team-scheduler-six.vercel.app/)
 
-**Note: Since it's Free tier database, might take some time to wake up the db after some inactivity.**
+**Note: The database might take some time to wake up the db after some inactivity.**
 
 ---
 
