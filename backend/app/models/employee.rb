@@ -1,3 +1,4 @@
 class Employee < ApplicationRecord
-    has_many :shifts, dependent: :destroy
+  belongs_to :user
+  has_many :shifts, dependent: :destroy
 end

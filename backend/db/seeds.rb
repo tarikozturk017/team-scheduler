@@ -1,16 +1,29 @@
-# Shift Types (e.g., Morning, Evening)
+# Shift Types
 ShiftType.create!([
   { name: "Morning", color_code: "#DFF0D8" },
   { name: "Evening", color_code: "#D9EDF7" },
   { name: "Night", color_code: "#F2DEDE" }
 ])
 
-# Employees
-Employee.create!([
-  { name: "Alice Johnson", role: "Barista" },
-  { name: "Bob Smith", role: "Cashier" },
-  { name: "Clara Lee", role: "Manager" }
-])
+# Users & Employees
+users = [
+  { email: "alice@example.com", name: "Alice Johnson", role: "Barista" },
+  { email: "bob@example.com", name: "Bob Smith", role: "Cashier" },
+  { email: "clara@example.com", name: "Clara Lee", role: "Manager" }
+]
+
+users.each do |u|
+  user = User.create!(
+    email: u[:email],
+    password: "password",
+    password_confirmation: "password"
+  )
+  Employee.create!(
+    user: user,
+    name: u[:name],
+    role: u[:role]
+  )
+end
 
 # Shifts
 Shift.create!([
