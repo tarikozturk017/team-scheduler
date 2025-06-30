@@ -1,0 +1,14 @@
+name: Keep Render API Awake
+
+on:
+  schedule:
+    - cron: '*/5 * * * *' # every 10 minutes
+  workflow_dispatch: # allows manual trigger
+
+jobs:
+  keep-awake:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Render backend
+        run: |
+          curl -s -o /dev/null https://team-scheduler-mo89.onrender.com/api/v1/shifts

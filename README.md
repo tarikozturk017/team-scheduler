@@ -2,6 +2,11 @@
 
 A simple employee shift scheduling system with a Ruby on Rails API backend and a modern React (Next.js) frontend.
 
+🔗 Live Demo
+👉 [https://team-scheduler-six.vercel.app/](https://team-scheduler-six.vercel.app/)
+
+**Note: The database might take some time to wake up the db after some inactivity.**
+
 ---
 
 ## Tech Stack
@@ -28,11 +33,4 @@ A simple employee shift scheduling system with a Ruby on Rails API backend and a
 
 ![team-scheduler-data-structure](./assets/image.png)
 
-## Getting Started (Backend)
 
-```bash
-cd backend
-bundle install
-rails db:create db:migrate db:seed
-rails server
-```
