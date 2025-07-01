@@ -4,12 +4,12 @@ module Api
       before_action :set_employee, only: [:show, :update, :destroy]
 
       def index
-        employees = Employee.all
-        render json: employees
+        employees = Employee.includes(:user)
+        render json: employees.as_json(include: { user: { only: [:email] } })
       end
 
       def show
-        render json: @employee
+        render json: @employee.as_json(include: { user: { only: [:email] } })
       end
 
       def create
@@ -41,7 +41,7 @@ module Api
       end
 
       def employee_params
-        params.require(:employee).permit(:name, :role)
+        params.require(:employee).permit(:name, :role, :user_id)
       end
     end
   end

@@ -4,17 +4,18 @@ module Api
       before_action :set_shift, only: [:show, :update, :destroy]
 
       def index
-        render json: Shift.includes(:employee, :shift_type).map { |shift| format_shift(shift) }
+        shifts = Shift.includes(:employee, :shift_type).all
+        render json: shifts.map { |shift| serialize_shift(shift) }
       end
 
       def show
-        render json: format_shift(@shift)
+        render json: serialize_shift(@shift)
       end
 
       def create
         shift = Shift.new(shift_params)
         if shift.save
-          render json: format_shift(shift), status: :created
+          render json: serialize_shift(shift), status: :created
         else
           render json: { errors: shift.errors.full_messages }, status: :unprocessable_entity
         end
@@ -22,7 +23,7 @@ module Api
 
       def update
         if @shift.update(shift_params)
-          render json: format_shift(@shift)
+          render json: serialize_shift(@shift)
         else
           render json: { errors: @shift.errors.full_messages }, status: :unprocessable_entity
         end
@@ -43,9 +44,12 @@ module Api
         params.require(:shift).permit(:employee_id, :shift_type_id, :date, :start_time, :end_time)
       end
 
-      def format_shift(shift)
+      def serialize_shift(shift)
         {
           id: shift.id,
+          date: shift.date,
+          start_time: shift.start_time,
+          end_time: shift.end_time,
           employee: {
             id: shift.employee.id,
             name: shift.employee.name,
@@ -55,10 +59,7 @@ module Api
             id: shift.shift_type.id,
             name: shift.shift_type.name,
             color_code: shift.shift_type.color_code
-          },
-          date: shift.date,
-          start_time: shift.start_time,
-          end_time: shift.end_time
+          }
         }
       end
     end
