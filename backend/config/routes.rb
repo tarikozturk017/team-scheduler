@@ -9,6 +9,7 @@ Rails.application.routes.draw do
       resources :employees
       resources :shift_types
       resources :shifts
+      resources :users, only: [:create]
     end
   end
 end
