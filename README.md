@@ -31,6 +31,7 @@ A simple employee shift scheduling system with a Ruby on Rails API backend and a
 
 ## Data Structure
 
-![team-scheduler-data-structure](./assets/image.png)
+![image](https://github.com/user-attachments/assets/bb706c77-3608-44ba-be29-5e6daf6ae2b4)
+
 
 
